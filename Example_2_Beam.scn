@@ -8,9 +8,10 @@
   <RequiredPlugin pluginName='SofaGeneralLinearSolver'/>
   <RequiredPlugin pluginName='SofaGeneralTopology'/>
   <RequiredPlugin pluginName='SofaImplicitOdeSolver'/>
-  <RequiredPlugin pluginName='SofaGeneralSimpleFem'/>
+<!--  <RequiredPlugin pluginName='SofaGeneralSimpleFeme'/> -->
   <RequiredPlugin pluginName='SofaBoundaryCondition'/>
   <RequiredPlugin pluginName='SofaDenseSolver'/>
+  <RequiredPlugin pluginName='SofaGeneralLinearSolver'/>
   <RequiredPlugin pluginName='SofaMeshCollision'/>
   <RequiredPlugin pluginName='SofaRigid'/>
   <RequiredPlugin pluginName='SofaConstraint'/>
@@ -33,140 +34,167 @@
   <MinProximityIntersection name="Proximity" alarmDistance="0.3" contactDistance="0.2" />
   <DefaultContactManager name="Response" response="default" />
 
+<!-- //////////////////////////   BEAM   /////////////////////////////////// -->
+  <Node name="Beam" >
+        <EulerImplicitSolver rayleighStiffness="0" printLog="false" rayleighMass="0.1" />
+        <BTDLinearSolver template="BTDMatrix6d" printLog="false" verbose="false" />
+  <!--      <SparseLUSolver printLog="0" verbose="0"/>  -->
+        <MechanicalObject template="Rigid3d" name="beam_DOFs" position="0 0 0 0 0 0 1   0.07329 0 0 0 0 0 1   0.14658 0 0 0 0 0 1   0.21987 0 0 0 0 0 1   0.29316 0 0 0 0 0 1   0.36645 0 0 0 0 0 1
+                                                                        0.43974 0 0 0 0 0 1   0.51303 0 0 0 0 0 1   0.58632 0 0 0 0 0 1   0.65961 0 0 0 0 0 1   0.7329 0 0 0 0 0 1"/>
+        <MeshTopology name="lines_Beam" lines="0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10"/>
+  <!--     <FixedPlaneConstraint direction="0 1 0" dmin="-0.002" dmax="0.002" />  -->
 
-  <Node name="Beam">
-      <EulerImplicitSolver rayleighStiffness="0" printLog="false" rayleighMass="0.1" />
-      <BTDLinearSolver template="BTDMatrix6d" printLog="false" verbose="false" />
-<!--      <SparseLUSolver printLog="0" verbose="0"/>  -->
+       <FixedConstraint name="FixedConstraint" indices="0" />
+  <!--     <UniformMass totalMass="0.0895" printLog="false" /> -->
+       <UniformMass vertexMass="0.00813 1 1 0 0 0 1 0 0 0 1" printLog="false" />
+       <BeamFEMForceField name="FEM" radius="0.00465" youngModulus="70000000000" poissonRatio="0.33"/>
+       <Monitor template="Rigid3d" name="Beam_Alone_Movement_Femur" listening="1" indices="10" showPositions="1" PositionsColor="1 1 0 1" ExportPositions="true"/>
+  <!--     <Monitor template="Rigid3d" name="Beam_Alone_Movement" listening="1" indices="10" showPositions="1" PositionsColor="1 1 0 1" ExportPositions="true"/>  -->
 
-      <MechanicalObject template="Rigid3d" name="beam_DOFs" position="0 0 0 0 0 0 1   0.07329 0 0 0 0 0 1   0.14658 0 0 0 0 0 1   0.21987 0 0 0 0 0 1   0.29316 0 0 0 0 0 1   0.36645 0 0 0 0 0 1
-                                                                      0.43974 0 0 0 0 0 1   0.51303 0 0 0 0 0 1   0.58632 0 0 0 0 0 1   0.65961 0 0 0 0 0 1   0.7329 0 0 0 0 0 1"/>
-      <MeshTopology name="lines_Beam" lines="0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10"/>
-<!--     <FixedPlaneConstraint direction="0 1 0" dmin="-0.002" dmax="0.002" />  -->
+       <UncoupledConstraintCorrection/>    <!-- FreeMotionAnimationLoop  -->
 
-     <FixedConstraint name="FixedConstraint" indices="0" />
-<!--     <UniformMass totalMass="0.0895" printLog="false" /> -->
-     <UniformMass vertexMass="0.00813 1 1 0 0 0 1 0 0 0 1" printLog="false" />
-     <BeamFEMForceField name="FEM" radius="0.00465" youngModulus="70000000000" poissonRatio="0.33"/>
+       <Node name="VisualNode_beam">  <!-- check to modify it well with correspondances measument -->
+             <CubeTopology nx="10" ny="2" nz="2" min="0 -0.5 -0.003" max="10 0.5 0.003" />
+             <OglModel name="Visual" color="1 1 0 1.0" />
+             <BeamLinearMapping isMechanical="true"/>
+       </Node>
 
-<!--     <Monitor template="Rigid3d" name="Beam_Alone_Movement" listening="1" indices="10" showPositions="1" PositionsColor="1 1 0 1" ExportPositions="true"/>  -->
+       <Node name="ConstraintPoint_Beam_HipMass">		<!-- This constraint creates a point to joint the Hip mass -->
+             <MechanicalObject name="points_Beam" template="Rigid3d" position="0 0 0 0 0 0 1" />
+             <RigidRigidMapping index="10"/>
+       </Node>
 
-     <UncoupledConstraintCorrection/>    <!-- FreeMotionAnimationLoop  -->
+       <Node name="ConstraintPoint_Beam_Femur">		<!-- This constraint creates a point to joint the Femur -->
+             <MechanicalObject name="points_Beam" template="Vec3d" position="0 -0.1 0 0 0.1 0" />
+             <RigidMapping index="10"/>
+       </Node>
 
-     <Node name="VisualNode_beam">  <!-- check to modify it well with correspondances measument -->
-       <CubeTopology nx="10" ny="2" nz="2" min="0 -0.5 -0.003" max="10 0.5 0.003" />
-       <OglModel name="Visual" color="1 1 0 1.0" />
-       <BeamLinearMapping isMechanical="true"/>
-     </Node>
+       <Node name="ConstraintPoint_Beam_Femur1">		<!-- This constraint creates a point to joint the Femur -->
+             <MechanicalObject name="points_Beam" template="Vec3d" position="0 -0.05 0 0 0.05 0" />
+             <RigidMapping index="10"/>
+       </Node>
 
-     <Node name="ConstraintPoint_beam">		<!-- This constraint creates a point to joint the Hip mass -->
-         <MechanicalObject name="points_beam" template="Vec3d" position="0 0 0" />
-         <RigidMapping index="10"/>
-     </Node>
-     <!-- CommunicationZMQ sends position end beam -->
-<!-- <ServerCommunicationZMQ name="zmq" job="sender" pattern="publish/subscribe" port="6000"/>
-     <CommunicationSubscriber name="sub" communication="@zmq" subject="/position" target="@ConstraintPoint_beam/points_beam" datas="position"/> -->
-  </Node>
-
-  <Node name="Mass_Hip">
-
-    <EulerImplicitSolver rayleighStiffness="0" printLog="false"  rayleighMass="0.1" />
-    <SparseLUSolver printLog="0" verbose="0"/>
-    <!--<MinResLinearSolver iterations="1000" tolerance="1e-9" printLog="1" verbose="0"/>-->
-    <MechanicalObject template="Rigid3d" name="Hip_Mass"  position="0.7329 0 0 0.707107 0 -0.707107 0"/>
-    <UniformMass name="MassSolid1" totalMass="0.58" />
-    <UncoupledConstraintCorrection />
-
-    <Node name="Visual_Mass">
-    	    <MeshObjLoader name="meshLoader" filename="mesh/sphere.obj" handleSeams="1" scale3d="0.025 0.025 0.025"  translation="0 0 0" />
-            <OglModel name="Visual" src="@meshLoader" color="0.6 0.5 0.5 1" />
-            <RigidMapping input="@.." output="@Visual" />
-    </Node>
-
-    <Node name="ConstraintPoint_Hip_Mass">  <!-- This constraint creates a point to joint the trunk -->
-         <MechanicalObject name="points_Hip_1" template="Vec3d" position="0 0 0" />
-         <RigidMapping index="0"/>
-    </Node>
+       <Node name="ConstraintPoint_Beam_Femur2">		<!-- This constraint creates a point to joint the Femur -->
+             <MechanicalObject name="points_Beam" template="Vec3d" position="0 -0.2 0 0 0.2 0" />
+             <RigidMapping index="10"/>
+       </Node>
 
   </Node>
+<!-- ///////////////////////////   HIP MASS  /////////////////////////////// -->
+    <Node name="Mass_Hip">
 
-  <BilateralInteractionConstraint template="Vec3d" object1="@Beam/ConstraintPoint_beam/points_beam" object2="@Mass_Hip/ConstraintPoint_Hip_Mass/points_Hip_1" first_point="0" second_point="0" />
+         <EulerImplicitSolver rayleighStiffness="0" printLog="false"  rayleighMass="0.1" />
+         <CGLinearSolver iterations="25" tolerance="1e-15" threshold="1e-15"/> <!-- <SparseLUSolver printLog="0" verbose="0"/> -->
+         <!--<MinResLinearSolver iterations="1000" tolerance="1e-9" printLog="1" verbose="0"/>-->
+         <MechanicalObject template="Rigid3d" name="Hip_Mass"  position="0.7329 0 0 0 0 0 1"/>
+         <UniformMass template="Rigid3d,RigidMass<3u,double>" name="MassSolid1" totalMass="0.58" />
+         <UncoupledConstraintCorrection />
 
+         <Node name="Visual_Mass">
+                 <MeshObjLoader name="meshLoader" filename="mesh/sphere.obj" handleSeams="1" scale3d="0.025 0.025 0.025"  translation="0 0 0" />
+                 <OglModel name="Visual" src="@meshLoader" color="0.6 0.5 0.5 1" />
+                 <RigidMapping input="@.." output="@Visual" />
+         </Node>
+
+         <Node name="ConstraintPoint_Hip_Mass">  <!-- This constraint creates a point to joint the trunk -->
+                <MechanicalObject name="points_Hip" template="Rigid3d" position="0 0 0 0 0 0 1" />
+                <RigidRigidMapping index="0"/>
+         </Node>
+
+  </Node>
+
+  <BilateralInteractionConstraint template="Rigid3d" object1="@Beam/ConstraintPoint_Beam_HipMass/points_Beam" object2="@Mass_Hip/ConstraintPoint_Hip_Mass/points_Hip"  first_point="0" second_point="0" />
+<!-- ///////////////////////////////   FEMUR   ///////////////////////////// -->
   <Node name="Femur" gravity="0 0 -9.81">
-        <EulerImplicitSolver name="Implicit Euler Solver"  rayleighStiffness="0.1" rayleighMass="0.1" />
-        <CGLinearSolver iterations="25" tolerance="1e-9" threshold="1e-15"/> <!-- <SparseLUSolver printLog="0" verbose="0"/> -->
-        <MechanicalObject template="Rigid3d" />
-   	  <UniformMass template="Rigid3d,RigidMass<3u,double>"  totalMass="0.001" />
+
+      <EulerImplicitSolver name="Implicit Euler Solver"  rayleighStiffness="0.0001" rayleighMass="0.0001" />
+      <CGLinearSolver iterations="25" tolerance="1e-15" threshold="1e-15"/> <!-- <SparseLUSolver printLog="0" verbose="0"/> -->
+      <MechanicalObject template="Rigid3d" />
+    	<UniformMass template="Rigid3d,RigidMass<3u,double>"  totalMass="0.005" />
 
 <!-- 	<BeamFEMForceField name="FEM" radius="0.00465" youngModulus="70000000000" poissonRatio="0.33" />  -->
 <!--    <PartialFixedConstraint fixedDirections="0 1 0 0 0 0" /> -->
 <!--    <OscillatorConstraint name="OscillatingConstraint" oscillators="0 0.7329 0 -0.2645 100 0 0 5 0" />  -->
 <!-- 	<ConstantForceField indices="0" forces="0 0 0 0 7.5 0" showArrowSize="0.5" printLog="true"/>  -->
-	<UncoupledConstraintCorrection />
+	    <UncoupledConstraintCorrection />
 
-	<Node name="Femur_Nodes" gravity="0 0 -9.81">    <!-- position="0.7329 0 0 0.707107 0 -0.707107 0  0.7329 0 -0.2645 0.707107 0 -0.707107 0" -->
-		<MechanicalObject template="Rigid3d" name="DOFs2" position="0.7329 0 0 0.707107 0 -0.707107 0  0.7329 0 -0.2645 0.707107 0 -0.707107 0" />
+	    <Node name="Femur_Nodes" gravity="0 0 -9.81">
+        		<MechanicalObject template="Rigid3d" name="DOFs2" position="0.7329 0 0 0 0 0 1  0.7329 0 -0.2645 0 0 0 1" />
 
-  <Node name="Publisher_Node">
-    <!-- CommunicationZMQ sends position end beam -->
-      <ServerCommunicationZMQ name="zmq" job="sender" pattern="publish/subscribe" port="6000"/>
-      <CommunicationSubscriber name="pub" communication="@zmq" subject="/Femur_Pos" target="@../DOFs2" datas="position"/>
-  </Node>
+        		<Node name="Publisher_Node">
+            <!-- CommunicationZMQ sends position end beam -->
+                 	<ServerCommunicationZMQ name="zmq" job="sender" pattern="publish/subscribe" port="6000" refreshRate="1000"/>
+                	<CommunicationSubscriber name="pub" communication="@zmq" subject="/Femur_Pos" target="@../DOFs2" datas="position"/>
+            </Node>
 
-  <RigidRigidMapping name="angle-coord mapping" input="@.." output="@DOFs2" index="0" />
-	<ConstantForceField name="Force_Field" indices="0" forces="0 0 0 0 0 0" showArrowSize="0.5" printLog="true"/>
+        		<RigidRigidMapping name="angle-coord mapping" input="@.." output="@DOFs2" index="0" />
+        		<ConstantForceField name="Force_Field" indices="0" forces="0 0 0 0 0 0" showArrowSize="0.5" printLog="true"/>
 
+        		<Node name="Subcriber_Node">
+            <!-- CommunicationZMQ receives force to rotate femur -->
+              		<ServerCommunicationZMQ name="zmq" job="receiver" pattern="publish/subscribe" port="1234" refreshRate="1000"/>
+              		<CommunicationSubscriber name="sub" communication="@zmq" subject="/forcefield" target="@../Force_Field" datas="forces"/>
+           	</Node>
 
-  <Node name="Subcriber_Node">
-      <!-- CommunicationZMQ receives force to rotate femur -->
-  		 <ServerCommunicationZMQ name="zmq" job="receiver" pattern="publish/subscribe" port="1234"/>
-  		 <CommunicationSubscriber name="sub" communication="@zmq" subject="/forcefield" target="@../Force_Field" datas="forces"/>
+        	  <Node name="Visual">
+        	       	<CubeTopology nx="2" ny="2" nz="2" min="0 -0.1 -0.003" max="1 0.1 0.003" />
+        	       	<OglModel name="Visual" color="1 1 0 1.0" />
+        	       	<BeamLinearMapping isMechanical="true"/>
+        	  </Node>
 
-  </Node>
+        		<Node name="ConstraintPoint_Femur_Beam">
+              		<MechanicalObject name="points_Hip" template="Vec3d" position="0 -0.1 0 0 0.1 0" />
+              		<RigidMapping index="0"/>
+            </Node>
 
-       <Node name="Visual">
-       	<CubeTopology nx="2" ny="2" nz="2" min="0 -0.1 -0.003" max="1 0.1 0.003" />
-       	<OglModel name="Visual" color="1 1 0 1.0" />
-       	<BeamLinearMapping isMechanical="true"/>
+            <Node name="ConstraintPoint_Femur_Beam1">
+              		<MechanicalObject name="points_Hip" template="Vec3d" position="0 -0.05 0 0 0.05 0" />
+              		<RigidMapping index="0"/>
+            </Node>
+
+            <Node name="ConstraintPoint_Femur_Beam2">
+              		<MechanicalObject name="points_Hip" template="Vec3d" position="0 -0.2 0 0 0.2 0" />
+              		<RigidMapping index="0"/>
+            </Node>
+
+            <Node name="ConstraintPoint_Femur_KneeMass">
+              		<MechanicalObject name="points_Femur" template="Rigid3d" position="0 0 0 0 0 0 1" />
+              		<RigidRigidMapping index="1"/>
+            </Node>
        </Node>
-
-		<Node name="ConstraintPoint_Hip_Femur">
-            		<MechanicalObject name="points_Hip" template="Vec3d" position="0 0 0" />
-            		<RigidMapping index="0"/>
-        	</Node>
-
-        	<Node name="ConstraintPoint_Femur_Knee">
-            		<MechanicalObject name="points_Hip" template="Vec3d" position="0 0 0" />
-            		<RigidMapping index="1"/>
-        	</Node>
-       </Node>
   </Node>
 
-  <BilateralInteractionConstraint template="Vec3d" object1="@Mass_Hip/ConstraintPoint_Hip_Mass/points_Hip_1" object2="@Femur/Femur_Nodes/ConstraintPoint_Hip_Femur/points_Hip" first_point="0" second_point="0" />
+<BilateralInteractionConstraint template="Vec3d" object1="@Beam/ConstraintPoint_Beam_Femur/points_Beam" object2="@Femur/Femur_Nodes/ConstraintPoint_Femur_Beam/points_Hip" first_point="0" second_point="0"/>
+<BilateralInteractionConstraint template="Vec3d" object1="@Beam/ConstraintPoint_Beam_Femur/points_Beam" object2="@Femur/Femur_Nodes/ConstraintPoint_Femur_Beam/points_Hip" first_point="1" second_point="1"/>
+<BilateralInteractionConstraint template="Vec3d" object1="@Beam/ConstraintPoint_Beam_Femur1/points_Beam" object2="@Femur/Femur_Nodes/ConstraintPoint_Femur_Beam1/points_Hip" first_point="0" second_point="0"/>
+<BilateralInteractionConstraint template="Vec3d" object1="@Beam/ConstraintPoint_Beam_Femur1/points_Beam" object2="@Femur/Femur_Nodes/ConstraintPoint_Femur_Beam1/points_Hip" first_point="1" second_point="1"/>
+<BilateralInteractionConstraint template="Vec3d" object1="@Beam/ConstraintPoint_Beam_Femur2/points_Beam" object2="@Femur/Femur_Nodes/ConstraintPoint_Femur_Beam2/points_Hip" first_point="0" second_point="0"/>
+<BilateralInteractionConstraint template="Vec3d" object1="@Beam/ConstraintPoint_Beam_Femur2/points_Beam" object2="@Femur/Femur_Nodes/ConstraintPoint_Femur_Beam2/points_Hip" first_point="1" second_point="1"/>
+<!-- /////////////////////////////////  KNEE MASS  ///////////////////////// -->
+  <Node name="Mass_Knee">
 
-   <Node name="Mass_Knee">
+         <EulerImplicitSolver rayleighStiffness="0" printLog="false"  rayleighMass="0.1" />
+         <CGLinearSolver iterations="25" tolerance="1e-15" threshold="1e-15"/> <!-- <SparseLUSolver printLog="0" verbose="0"/> -->
+         <!--<MinResLinearSolver iterations="1000" tolerance="1e-9" printLog="1" verbose="0"/>-->
+         <MechanicalObject template="Rigid3d" name="Knee_Mass"  position="0.7329 0 -0.2645 0 0 0 1"/>
+         <UniformMass template="Rigid3d,RigidMass<3u,double>" name="MassSolid1" totalMass="0.58" />
+         <UncoupledConstraintCorrection />
 
-    <EulerImplicitSolver rayleighStiffness="0" printLog="false"  rayleighMass="0.1" />
-    <SparseLUSolver printLog="0" verbose="0"/>
-    <!--<MinResLinearSolver iterations="1000" tolerance="1e-9" printLog="1" verbose="0"/>-->
-    <MechanicalObject template="Rigid3d" name="Hip_Mass"  position="0.7329 0 -0.2645 0.707107 0 -0.707107 0"/>
-    <UniformMass name="MassSolid1" totalMass="0.58" />
-    <UncoupledConstraintCorrection />
+         <Node name="Visual_Mass">
+                 <MeshObjLoader name="meshLoader" filename="mesh/sphere.obj" handleSeams="1" scale3d="0.025 0.025 0.025"  translation="0 0 0" />
+                 <OglModel name="Visual" src="@meshLoader" color="0.6 0.5 0.5 1" />
+                 <RigidMapping input="@.." output="@Visual" />
+         </Node>
 
-    <Node name="Visual_Mass">
-    	    <MeshObjLoader name="meshLoader" filename="mesh/sphere.obj" handleSeams="1" scale3d="0.025 0.025 0.025"  translation="0 0 0" />
-            <OglModel name="Visual" src="@meshLoader" color="0.6 0.5 0.5 1" />
-            <RigidMapping input="@.." output="@Visual" />
-    </Node>
-
-    <Node name="ConstraintPoint_Hip_Mass">  <!-- This constraint creates a point to joint the trunk -->
-         <MechanicalObject name="points_Knee_1" template="Vec3d" position="0 0 0" />
-         <RigidMapping index="0"/>
-    </Node>
+         <Node name="ConstraintPoint_Knee_Mass">  <!-- This constraint creates a point to joint the Femur -->
+                <MechanicalObject name="points_Knee" template="Rigid3d" position="0 0 0 0 0 0 1" />
+                <RigidRigidMapping index="0"/>
+         </Node>
 
   </Node>
 
-  <BilateralInteractionConstraint template="Vec3d" object1="@Femur/Femur_Nodes/ConstraintPoint_Femur_Knee/points_Hip" object2="@Mass_Knee/ConstraintPoint_Hip_Mass/points_Knee_1" first_point="0" second_point="0" />
+  <BilateralInteractionConstraint template="Rigid3d" object1="@Femur/Femur_Nodes/ConstraintPoint_Femur_KneeMass/points_Femur" object2="@Mass_Knee/ConstraintPoint_Knee_Mass/points_Knee" first_point="0" second_point="0" />
+
 
 
 </Node>

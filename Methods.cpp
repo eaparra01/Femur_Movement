@@ -73,13 +73,14 @@ void convert_qt_angles(int vec_size, float *vector, float *vectorRm){
   // # - # - Px - Py - Pz - Qz - Qy - Qx - Qe - Px - Py - Pz - Qz - Qy - Qx - Qe
   // 0   1   2    3    4    5    6    7    8    9    10   11   12   13   14    15
 
-  float femurLenght = 0.2645;
-
   float disPosx = vector[9] - vector[2];
   float disPosy = vector[10] - vector[3];
   float disPosz = vector[11] - vector[4];
 
-  float thetaHip  = asin(disPosx/femurLenght);
+  // float femurLenght = 0.2645;
+  float length = std::sqrt(disPosx*disPosx + disPosy*disPosy + disPosz*disPosz);
+
+  float thetaHip  = asin(disPosx/length);
    /*           theta from x-z plane     */
    if( disPosz>=0 && disPosx>=0)
    {
@@ -90,8 +91,8 @@ void convert_qt_angles(int vec_size, float *vector, float *vectorRm){
    {
       thetaHip = -thetaHip - pi;
    }
-
-   float pfiHip = asin(disPosy/femurLenght);
+   /*           phi from y-z plane     */
+   float pfiHip = asin(disPosy/length);
    if( disPosz>=0 && disPosy>=0)
    {
       pfiHip = -pfiHip + pi;
