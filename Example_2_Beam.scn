@@ -8,6 +8,8 @@
   <RequiredPlugin pluginName='SofaGeneralLinearSolver'/>
   <RequiredPlugin pluginName='SofaGeneralTopology'/>
   <RequiredPlugin pluginName='SofaImplicitOdeSolver'/>
+  <!-- <RequiredPlugin pluginName='SofaExplicitOdeSolver'/> -->
+  <RequiredPlugin pluginName='SofaMiscEngine'/>
 <!--  <RequiredPlugin pluginName='SofaGeneralSimpleFeme'/> -->
   <RequiredPlugin pluginName='SofaBoundaryCondition'/>
   <RequiredPlugin pluginName='SofaDenseSolver'/>
@@ -16,6 +18,8 @@
   <RequiredPlugin pluginName='SofaRigid'/>
   <RequiredPlugin pluginName='SofaConstraint'/>
   <RequiredPlugin pluginName='SofaLoader'/>
+  <RequiredPlugin name="SofaGeneralSimpleFem"/> <!-- Needed to use components [BeamFEMForceField] -->
+  <RequiredPlugin name="SofaValidation"/> <!-- Needed to use components [Monitor] -->
   <RequiredPlugin name="Communication" pluginName="Communication" />
 
   <VisualStyle displayFlags="showForceFields showCollisionModels showWireframe" />
@@ -25,7 +29,7 @@
   <OglSceneFrame/>
 
   <FreeMotionAnimationLoop />
-  <GenericConstraintSolver tolerance="0.001" maxIterations="1000"/>		<!-- <LCPConstraintSolver tolerance="0.001" maxIt="1000"/> -->
+  <GenericConstraintSolver tolerance="1e-8" maxIterations="1000"/>		<!-- <LCPConstraintSolver tolerance="0.001" maxIt="1000"/> -->
 
   <DefaultPipeline depth="6" verbose="0" draw="0" />
   <BruteForceBroadPhase/>
@@ -109,8 +113,16 @@
 
       <EulerImplicitSolver name="Implicit Euler Solver"  rayleighStiffness="0.0001" rayleighMass="0.0001" />
       <CGLinearSolver iterations="25" tolerance="1e-15" threshold="1e-15"/> <!-- <SparseLUSolver printLog="0" verbose="0"/> -->
-      <MechanicalObject template="Rigid3d" />
+      <MechanicalObject name="FDOFs" template="Rigid3d" position="0.7329 0 0 0 0 0 1"/>
     	<UniformMass template="Rigid3d,RigidMass<3u,double>"  totalMass="0.005" />
+
+      <!-- Apply force on y axis -->
+      <ConstantForceField name="Force_Field" indices="0" forces="0 0 0 0 0 0" showArrowSize="0.5" printLog="true"/>
+      <Node name="Subcriber_Node">
+      <!-- CommunicationZMQ receives force to rotate femur -->
+            <ServerCommunicationZMQ name="zmq" job="receiver" pattern="publish/subscribe" port="1234" refreshRate="1000"/>
+            <CommunicationSubscriber name="sub" communication="@zmq" subject="/forcefield" target="@../Force_Field" datas="forces"/>
+      </Node>
 
 <!-- 	<BeamFEMForceField name="FEM" radius="0.00465" youngModulus="70000000000" poissonRatio="0.33" />  -->
 <!--    <PartialFixedConstraint fixedDirections="0 1 0 0 0 0" /> -->
@@ -119,7 +131,7 @@
 	    <UncoupledConstraintCorrection />
 
 	    <Node name="Femur_Nodes" gravity="0 0 -9.81">
-        		<MechanicalObject template="Rigid3d" name="DOFs2" position="0.7329 0 0 0 0 0 1  0.7329 0 -0.2645 0 0 0 1" />
+        		<MechanicalObject template="Rigid3d" name="DOFs2" position="0 0 0 0 0 0 1  0 0 -0.2645 0 0 0 1" showObject="1" showObjectScale="0.03"/>
 
         		<Node name="Publisher_Node">
             <!-- CommunicationZMQ sends position end beam -->
@@ -128,13 +140,16 @@
             </Node>
 
         		<RigidRigidMapping name="angle-coord mapping" input="@.." output="@DOFs2" index="0" />
-        		<ConstantForceField name="Force_Field" indices="0" forces="0 0 0 0 0 0" showArrowSize="0.5" printLog="true"/>
-
-        		<Node name="Subcriber_Node">
-            <!-- CommunicationZMQ receives force to rotate femur -->
-              		<ServerCommunicationZMQ name="zmq" job="receiver" pattern="publish/subscribe" port="1234" refreshRate="1000"/>
-              		<CommunicationSubscriber name="sub" communication="@zmq" subject="/forcefield" target="@../Force_Field" datas="forces"/>
-           	</Node>
+            <!-- x y x thetax thetay thetaz -->
+            <!-- <LinearMovementConstraint template="Rigid3d" name="Trajectories"  indices="0"  keyTimes="0 1 2 3 4 5 6"  movements="
+              0 0 0 0 0 0
+              0 0 0 0 3 0
+              0 0 0 0 -3 0
+              0 0 0 0 3 0
+              0 0 0 0 -3 0
+              0 0 0 0 0 0
+              0 0 0 0 0 0
+              " /> -->
 
         	  <Node name="Visual">
         	       	<CubeTopology nx="2" ny="2" nz="2" min="0 -0.1 -0.003" max="1 0.1 0.003" />
@@ -161,7 +176,13 @@
               		<MechanicalObject name="points_Femur" template="Rigid3d" position="0 0 0 0 0 0 1" />
               		<RigidRigidMapping index="1"/>
             </Node>
+
+            <Node name="Movement_Femur_KneeMass">
+                  <MechanicalObject name="points_Femur" template="Rigid3d" position="0 0 0 0 0 0 1" />
+                  <RigidRigidMapping index="0"/>
+            </Node>
        </Node>
+
   </Node>
 
 <BilateralInteractionConstraint template="Vec3d" object1="@Beam/ConstraintPoint_Beam_Femur/points_Beam" object2="@Femur/Femur_Nodes/ConstraintPoint_Femur_Beam/points_Hip" first_point="0" second_point="0"/>
