@@ -1,6 +1,7 @@
 #include <zmq.hpp>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <iomanip> //para usar setprecision
 #include <cstdlib>
@@ -10,8 +11,10 @@
 #include <time.h>
 #include <typeinfo>
 #include "Methods.h"
+#include "pidController.h"
 #include <cmath>
 #include <unistd.h>
+
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -40,7 +43,7 @@ int main()
 
     bool flagDir = true; // Clockwise
     bool flagMiddle = false;
-    float numForce[6] = {0.0,0.0,0.0,0.0,1.1,0.0};  // Change 5
+    float numForce[6] = {0.00,0.00,0.00,0.00,0.00,0.00};  // Change 5
 
     float angleDesired = 0;
     float angleBefore = 0;
@@ -49,10 +52,15 @@ int main()
     float angVelDesired = 0;
     float angVelPresente = 0;
 
-    float kp = 0.4;
-    float kd = 1.9;
-    float ff = 1.5;
+    float kp = 250;
+    float ki = 1;
+    float kd = 19;
     float t = 0.0;
+
+    pidController pid(kp,ki,kd,0.001,-500.3,500.3);
+    // std::ofstream myfile ("data_withoutinitialforce_negative_angle.txt");
+    // myfile.is_open();
+    // myfile<<"time "<<"force "<<"angle\n";
 
     while (1)
     {
@@ -71,23 +79,19 @@ int main()
 
 
       anglePresent = varPosR[0];
-      angleDesired = (pi/6)*cos(15.5195*t);
+      angleDesired = 1.0*cos(12.5*t); //15.5195
 
-      //numForce[4] =(ff-anglePresent/2)+ kp*(angleDesired-anglePresent);// + kd*(angVelDesired-angVelPresente);
-      numForce[4] = kp*(angleDesired-anglePresent);
-
-      angleBefore = anglePresent;
-
-      std::cout << varPosR[0] << " "<<numForce[4]<< " " <<angleDesired<<std::endl;
-      //numForce[4] = 0.9;
-      t = t + 0.002;
+      numForce[4] = pid.pidController_Update(angleDesired,anglePresent)*(1/0.73);
+      // myfile<< std::to_string(t)<<" "<<std::to_string(numForce[4])<<" "<<std::to_string(anglePresent)<<"\n";
+      std::cout<< t <<" "<<numForce[4]<< " " <<anglePresent<<" "<<std::endl;
+      t = t + 0.001;
 
       std::string mesg;
       create_msg_zqm("/forcefield ", "matrix int:6 int:1 ", numForce, 6, mesg);
-      //std::cout << mesg << std::endl;
       zmq::message_t reply_pub (mesg.size());
       memcpy (reply_pub.data (), mesg.c_str(), mesg.size());
       publisher.send (reply_pub);
     }
+    // myfile.close();
     return 0;
 }
