@@ -3,7 +3,6 @@
 #ifndef _METHODS_
 #define _METHODS_
 
-#include <zmq.hpp>
 #include <string>
 #include <iostream>
 #include <cstdlib>
@@ -11,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <cmath>
+#include <complex>
 #include <time.h>
 #include <iomanip>
 #include <typeinfo>

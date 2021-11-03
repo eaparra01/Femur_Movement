@@ -1,7 +1,5 @@
 
 #include "Methods.h"
-#include <cmath>
-#include <complex>
 
 static const float pi = 3.141592;
 
